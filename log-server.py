@@ -15,27 +15,6 @@ CORS(app)  # Enable CORS for all routes
 raw_logs = ["Log collection started"]
 db_logs = ["Log collection started"]
 
-# Generate sample logs for testing
-for i in range(1, 10):
-    raw_logs.append(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Sample raw log entry #{i}")
-    db_logs.append(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Sample DB log entry #{i}")
-
-def find_log_file():
-    """Find the most recent Flink log file."""
-    possible_paths = [
-        '/opt/flink/log/flink-*-taskexecutor-*.out',
-        '/opt/flink/log/flink-*.out',
-        '/opt/flink/log/*.out',
-        '/opt/flink/log/*'
-    ]
-    
-    for pattern in possible_paths:
-        files = glob.glob(pattern)
-        if files:
-            # Sort by modification time, newest first
-            return max(files, key=os.path.getmtime)
-    
-    return None
 
 def parse_and_store_log(log_line):
     if not log_line:
@@ -100,6 +79,25 @@ def get_db_logs():
 @app.route('/healthcheck')
 def healthcheck():
     return "OK"
+
+
+# Get the most recent log file of Flink
+def find_log_file():
+    possible_paths = [
+        '/opt/flink/log/flink-*-taskexecutor-*.out',
+        '/opt/flink/log/flink-*.out',
+        '/opt/flink/log/*.out',
+        '/opt/flink/log/*'
+    ]
+    
+    for pattern in possible_paths:
+        files = glob.glob(pattern)
+        if files:
+            # Sort by modification time, newest first
+            return max(files, key=os.path.getmtime)
+    
+    return None
+
 
 def start_flask():
     app.run(host='0.0.0.0', port=8001, debug=False)
